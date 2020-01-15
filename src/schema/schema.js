@@ -1,6 +1,9 @@
 const graphql = require('graphql')
 const Tag = require('../models/tag')
-const {GraphQLObjectType, GraphQLID, GraphQLInt, GraphQLBoolean, GraphQLString, GraphQLList, GraphQLSchema} = graphql
+const { GraphQLUpload } = require('graphql-upload')
+const {GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLSchema} = graphql
+const { storeFS } = require('../utils/uploadfile')
+
 
 
 const TagType = new GraphQLObjectType({
@@ -49,7 +52,7 @@ const RootQuery = new GraphQLObjectType({
 const Mutation = new GraphQLObjectType({
     name: 'Mutation',
     fields: {
-        addTag: {
+        createTag: {
             type: TagType,
             args: {
                 name: {type: GraphQLString},
@@ -57,10 +60,23 @@ const Mutation = new GraphQLObjectType({
                 capital: {type: GraphQLString},
                 population: {type: GraphQLString},
                 territory: {type: GraphQLString},
-                tag: {type: GraphQLString}
+                tag: {type: GraphQLUpload},
             },
-            resolve(parent, args){
-                return Tag(args).save()
+            async resolve(parent, args,){
+                const { filename, mimetype, createReadStream } = await args.tag
+                const stream = createReadStream()
+                const pathObj = await storeFS({ stream, filename });
+                const fileLocation = pathObj.path_picture;
+
+                let tag = new Tag({
+                    name: args.name,
+                    continent: args.continent,
+                    capital: args.capital,
+                    population: args.population,
+                    territory: args.territory,
+                    tag: fileLocation
+                })
+                return tag.save()
             }
         },
         updateTag: {
@@ -112,3 +128,5 @@ module.exports = new GraphQLSchema({
     mutation: Mutation
 })
 
+
+// { "query": "mutation($tag: Upload ){ createTag(name: \"Colombia\" , continent: \"America\" , capital: \"Bogota\" , population: \"33434\" , territory: \"23342\", tag: $tag ){ name } }", "variables": { "tag": null} }
