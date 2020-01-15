@@ -33,6 +33,15 @@ const RootQuery = new GraphQLObjectType({
             resolve(parent, args){
                 return Tag.find().sort("name")
             }
+        },
+        tagsByContinent: {
+            type: new GraphQLList(TagType),
+            args: {
+                continent: {type: GraphQLString}
+            },
+            resolve(parent, args){
+                return Tag.find({continent: args.continent}).sort("name")
+            }
         }
     }
 })
