@@ -10,7 +10,7 @@ const mongoose = require('mongoose')
 const app = express()
 
 const PORT = process.env.PORT || 3131
-const MONGODB_URI = process.env.DATABASE_URI || 'mongodb+srv://fernandapalacios:Hola12345@tester-fqndx.mongodb.net/flags?retryWrites=true&w=majority'
+const MONGODB_URI = process.env.DATABASE_URI
 
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
