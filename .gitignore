@@ -1,2 +1,2 @@
 node_modules/
-src/pictures/*
+src/pictures/ .gitkeep

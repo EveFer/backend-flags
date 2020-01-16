@@ -1,13 +1,13 @@
 const graphql = require('graphql')
-const Tag = require('../models/tag')
+const Flag = require('../models/Flag')
 const { GraphQLUpload } = require('graphql-upload')
 const {GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLSchema} = graphql
 const { storeFS } = require('../utils/uploadfile')
+const fs = require('fs')
 
 
-
-const TagType = new GraphQLObjectType({
-    name: 'Tags',
+const FlagType = new GraphQLObjectType({
+    name: 'Flag',
     fields: ()=>({
         id: {type: GraphQLID},
         name: {type: GraphQLString},
@@ -15,35 +15,35 @@ const TagType = new GraphQLObjectType({
         capital: {type: GraphQLString},
         population: {type: GraphQLString},
         territory: {type: GraphQLString},
-        tag: {type: GraphQLString},
+        picture: {type: GraphQLString},
     })
 })
 
 const RootQuery = new GraphQLObjectType({
     name: 'RootQueryType',
     fields: {
-        tag: {
-            type: TagType,
+        Flag: {
+            type: FlagType,
             args: {
                 id: {type: GraphQLID}
             },
             resolve(parent, args){
-                return Tag.findById(args.id)
+                return Flag.findById(args.id)
             }
         },
-        tags: {
-            type: new GraphQLList(TagType),
+        Flags: {
+            type: new GraphQLList(FlagType),
             resolve(parent, args){
-                return Tag.find().sort("name")
+                return Flag.find().sort("name")
             }
         },
-        tagsByContinent: {
-            type: new GraphQLList(TagType),
+        FlagsByContinent: {
+            type: new GraphQLList(FlagType),
             args: {
                 continent: {type: GraphQLString}
             },
             resolve(parent, args){
-                return Tag.find({continent: args.continent}).sort("name")
+                return Flag.find({continent: args.continent}).sort("name")
             }
         }
     }
@@ -52,35 +52,35 @@ const RootQuery = new GraphQLObjectType({
 const Mutation = new GraphQLObjectType({
     name: 'Mutation',
     fields: {
-        createTag: {
-            type: TagType,
+        createFlag: {
+            type: FlagType,
             args: {
                 name: {type: GraphQLString},
                 continent: {type: GraphQLString},
                 capital: {type: GraphQLString},
                 population: {type: GraphQLString},
                 territory: {type: GraphQLString},
-                tag: {type: GraphQLUpload},
+                picture: {type: GraphQLUpload},
             },
             async resolve(parent, args,){
-                const { filename, mimetype, createReadStream } = await args.tag
+                const { filename, mimetype, createReadStream } = await args.picture
                 const stream = createReadStream()
                 const pathObj = await storeFS({ stream, filename });
                 const fileLocation = pathObj.path_picture;
 
-                let tag = new Tag({
+                let flag = new Flag({
                     name: args.name,
                     continent: args.continent,
                     capital: args.capital,
                     population: args.population,
                     territory: args.territory,
-                    tag: fileLocation
+                    picture: fileLocation
                 })
-                return tag.save()
+                return flag.save()
             }
         },
-        updateTag: {
-            type: TagType,
+        updateFlag: {
+            type: FlagType,
             args: {
                 id: {type: GraphQLID},
                 name: {type: GraphQLString},
@@ -88,35 +88,35 @@ const Mutation = new GraphQLObjectType({
                 capital: {type: GraphQLString},
                 population: {type: GraphQLString},
                 territory: {type: GraphQLString},
-                tag: {type: GraphQLString},
+                picture: {type: GraphQLString},
             },
             resolve(parent, args){
-                return Tag.findByIdAndUpdate(
+                return Flag.findByIdAndUpdate(
                     args.id, {
                         name: args.name,
                         continent: args.continent,
                         capital: args.capital,
                         population: args.population,
                         territory: args.territory,
-                        tag: args.tag
+                        picture: args.picture
                     },
                     {new: true}
                 )
             }
         },
-        deleteTag: {
-            type: TagType,
+        deleteFlag: {
+            type: FlagType,
             args: {
                 id: {type: GraphQLID}
             },
             resolve(parent, args){
-                return Tag.findByIdAndDelete(args.id)
+                return Flag.findByIdAndDelete(args.id)
             }
         },
-        deleteAllTag: {
-            type: TagType,
+        deleteAllFlag: {
+            type: FlagType,
             resolve(parent, args){
-                return Tag.deleteMany({})
+                return Flag.deleteMany({})
             }
         }
     }
@@ -129,4 +129,4 @@ module.exports = new GraphQLSchema({
 })
 
 
-// { "query": "mutation($tag: Upload ){ createTag(name: \"Colombia\" , continent: \"America\" , capital: \"Bogota\" , population: \"33434\" , territory: \"23342\", tag: $tag ){ name } }", "variables": { "tag": null} }
+// { "query": "mutation($picture: Upload ){ createFlag(name: \"Colombia\" , continent: \"America\" , capital: \"Bogota\" , population: \"33434\" , territory: \"23342\", flag: $picture ){ name } }", "variables": { "picture": null} }
